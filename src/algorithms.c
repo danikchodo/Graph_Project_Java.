@@ -36,7 +36,17 @@ void run_fruchterman_reingold(Graph *g) {
             g->vertices[v].dy = 0.0;
             for (int u = 0; u < g->num_vertices; u++) {
                 if (v != u) {
-                    // TODO: wektor odpychający u od v i dodaj do dx/dy
+                    double delta_x = g->vertices[v].x - g->vertices[u].x;
+                    double delta_y = g->vertices[v].y - g->vertices[u].y;
+
+                    double distance = sqrt(delta_x * delta_x + delta_y * delta_y);
+                    if (distance < 0.0001) distance = 0.0001;
+
+                    double force = (k * k) / distance;
+
+                    g->vertices[v].dx += (delta_x / distance) * force;
+                    g->vertices[v].dy += (delta_y / distance) * force;
+
                 }
             }
         }
@@ -44,13 +54,44 @@ void run_fruchterman_reingold(Graph *g) {
         for (int e = 0; e < g->num_edges; e++) {
             int v = g->edges[e].from;
             int u = g->edges[e].to;
+
+            double delta_x = g->vertices[v].x - g->vertices[u].x;
+            double delta_y = g->vertices[v].y - g->vertices[u].y;
+
+            double distance = sqrt(delta_x * delta_x + delta_y * delta_y);
+            if (distance < 0.0001) distance = 0.0001;
             
-            // TODO: wektor przyciągający 'v' i 'u' do siebie
-            // TODO: dodaj siłę do v->dx/dy, a odjac od u->dx/dy
+            double force = (distance * distance) / k;
+            
+            double force_x = (delta_x / distance) * force;
+            double force_y = (delta_y / distance) * force;
+            
+            g->vertices[v].dx -= force_x;
+            g->vertices[v].dy -= force_y;
+            g->vertices[u].dx += force_x;
+            g->vertices[u].dy += force_y;
+            
         }
 
         for (int v = 0; v < g->num_vertices; v++) {
-            // TODO: przesuniecie o wektor
+            double dx = g->vertices[v].dx;
+            double dy = g->vertices[v].dy;
+            double displacement = sqrt(dx * dx + dy * dy);
+
+            if (displacement > 0.0001) {
+                double limited_dist = (displacement < temp) ? displacement : temp;
+
+                g->vertices[v].x += (dx / displacement) * limited_dist;
+                g->vertices[v].y += (dy / displacement) * limited_dist;
+            }
+
+            double margin = 20.0;
+            double max_w = 800.0 - margin;
+
+            if (g->vertices[v].x < margin) g->vertices[v].x = margin;
+            if (g->vertices[v].x > max_w)  g->vertices[v].x = max_w;
+            if (g->vertices[v].y < margin) g->vertices[v].y = margin;
+            if (g->vertices[v].y > max_w)  g->vertices[v].y = max_w;
         }
 
         temp *= 0.95; 

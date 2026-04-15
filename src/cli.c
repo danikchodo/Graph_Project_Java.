@@ -7,7 +7,7 @@ void print_help() {
     printf("Opcje:\n");
     printf("  -i <ścieżka>  Ścieżka do pliku wejściowego (wymagany)\n");
     printf("  -o <ścieżka>  Ścieżka do pliku wyjściowego (domyślnie: stdout)\n");
-    printf("  -a <nazwa>    Wybór algorytmu: 'fr' lub 'tri' (domyślnie: fr)\n");
+    printf("  -a <nazwa>    Wybór algorytmu: fr (Fruchterman), tutte (Tutte). Domyślnie: fr\n");
     printf("  -b            Zapis pliku wyjściowego w formacie binarnym\n");
     printf("  -v            Tryb gadatliwy (verbose)\n");
     printf("  -h            Wyświetla tę pomoc\n");

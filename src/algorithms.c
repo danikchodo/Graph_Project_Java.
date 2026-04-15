@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 #include "../include/algorithms.h"
 #include "../include/graph.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 static void init_random_positions(Graph *g) {
     for (int i = 0; i < g->num_vertices; i++) {
@@ -97,5 +101,134 @@ void run_fruchterman_reingold(Graph *g) {
         temp *= 0.95; 
     }
     
+    printf("Algorytm zakonczony pomyslnie.\n");
+}
+
+//szukanie cyklu 
+static bool dfs_find_cycle(Graph *g, int u, int p, int *visited, int *parent, int *c_start, int *c_end) {
+    visited[u] = 1;
+    for (int i = 0; i < g->num_edges; i++) {
+        int v = -1;
+        if (g->edges[i].from == u) v = g->edges[i].to;
+        else if (g->edges[i].to == u) v = g->edges[i].from;
+
+        if (v != -1 && v != p) {
+            if (visited[v] == 1) { 
+                *c_start = v;
+                *c_end = u;
+                return true;
+            }
+            if (visited[v] == 0) {
+                parent[v] = u;
+                if (dfs_find_cycle(g, v, u, visited, parent, c_start, c_end)) {
+                    return true;
+                }
+            }
+        }
+    }
+    visited[u] = 2; 
+    return false;
+}
+
+void run_tutte(Graph *g) {
+    if (g == NULL || g->num_vertices < 3) return;
+    printf("Rozpoczynam pelny algorytm Tutte'a (z dynamicznym wykrywaniem brzegow)...\n");
+
+    int *visited = calloc(g->num_vertices, sizeof(int));
+    int *parent = malloc(g->num_vertices * sizeof(int));
+    for (int i = 0; i < g->num_vertices; i++) parent[i] = -1;
+
+    int c_start = -1, c_end = -1;
+    bool has_cycle = false;
+
+    for (int i = 0; i < g->num_vertices; i++) {
+        if (visited[i] == 0) {
+            if (dfs_find_cycle(g, i, -1, visited, parent, &c_start, &c_end)) {
+                has_cycle = true;
+                break;
+            }
+        }
+    }
+
+    int *boundary = malloc(g->num_vertices * sizeof(int));
+    int b_count = 0;
+    bool *is_boundary = calloc(g->num_vertices, sizeof(bool));
+
+    if (has_cycle) {
+        int curr = c_end;
+        while (curr != c_start && curr != -1) {
+            boundary[b_count++] = curr;
+            is_boundary[curr] = true;
+            curr = parent[curr];
+        }
+        boundary[b_count++] = c_start;
+        is_boundary[c_start] = true;
+    } else {
+        b_count = (g->num_vertices >= 3) ? 3 : g->num_vertices;
+        for(int i = 0; i < b_count; i++) {
+            boundary[i] = i;
+            is_boundary[i] = true;
+        }
+    }
+
+    double radius = 350.0;
+    double center_x = 400.0, center_y = 400.0;
+
+    for (int i = 0; i < b_count; i++) {
+        int v = boundary[i];
+        double angle = 2.0 * M_PI * i / b_count;
+        g->vertices[v].x = center_x + radius * cos(angle);
+        g->vertices[v].y = center_y + radius * sin(angle);
+    }
+
+    for (int i = 0; i < g->num_vertices; i++) {
+        if (!is_boundary[i]) {
+            g->vertices[i].x = center_x;
+            g->vertices[i].y = center_y;
+        }
+    }
+
+    double *new_x = malloc(g->num_vertices * sizeof(double));
+    double *new_y = malloc(g->num_vertices * sizeof(double));
+    int max_iterations = 1000;
+
+    for (int iter = 0; iter < max_iterations; iter++) {
+        for (int i = 0; i < g->num_vertices; i++) {
+            if (is_boundary[i]) continue; 
+
+            double sum_x = 0.0, sum_y = 0.0;
+            int degree = 0;
+
+            for (int j = 0; j < g->num_edges; j++) {
+                int neighbor = -1;
+                if (g->edges[j].from == i) neighbor = g->edges[j].to;
+                else if (g->edges[j].to == i) neighbor = g->edges[j].from;
+
+                if (neighbor != -1) {
+                    sum_x += g->vertices[neighbor].x;
+                    sum_y += g->vertices[neighbor].y;
+                    degree++;
+                }
+            }
+
+            if (degree > 0) {
+                new_x[i] = sum_x / degree;
+                new_y[i] = sum_y / degree;
+            } else {
+                new_x[i] = g->vertices[i].x;
+                new_y[i] = g->vertices[i].y;
+            }
+        }
+
+        for (int i = 0; i < g->num_vertices; i++) {
+            if (!is_boundary[i]) {
+                g->vertices[i].x = new_x[i];
+                g->vertices[i].y = new_y[i];
+            }
+        }
+    }
+
+    free(visited); free(parent); free(boundary); free(is_boundary);
+    free(new_x); free(new_y);
     printf("Algorytm zakonczony pomyslnie.\n");
 }

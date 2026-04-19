@@ -1,22 +1,58 @@
-
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "../include/cli.h"
+#include "../include/graph.h"
+#include "../include/algorithms.h"
+#include "../include/io.h" 
 
 int main(int argc, char *argv[]) {
     AppConfig config;
 
     if (parse_arguments(argc, argv, &config) != 0) {
-        fprintf(stderr, "Błąd [3]: Nieprawidłowe argumenty wywołania. Użyj flagi -h, aby wyświetlić pomoc.\n");
+        // błąd [3] z dokumentacji
         return 3;
     }
 
     if (config.verbose) {
-        printf("--- TRYB GADATLIWY (VERBOSE) WLACZONY ---\n");
-        printf("Plik wejściowy: %s\n", config.input_file);
-        printf("Plik wyjściowy: %s\n", config.output_file ? config.output_file : "stdout");
-        printf("Wybrany algorytm: %s\n", config.algorithm);
-        printf("Zapis binarny: %s\n", config.binary_output ? "TAK" : "NIE");
-        printf("-----------------------------------------\n");
+        printf("--- LOG: Start programu ---\n");
+        printf("Wczytywanie: %s\n", config.input_file);
+    }
+
+    Graph *g = load_graph_from_text(config.input_file);
+    
+    if (g == NULL) {
+        fprintf(stderr, "Błąd [1]: Nie udało się wczytać grafu z pliku %s\n", config.input_file);
+        return 1;
+    }
+
+    if (config.verbose) {
+        printf("Wczytano graf: %d wierzchołków, %d krawędzi.\n", g->num_vertices, g->num_edges);
+    }
+
+    if (strcmp(config.algorithm, "fr") == 0 || strcmp(config.algorithm, "fruchterman") == 0) {
+        run_fruchterman_reingold(g);
+    } 
+    else if (strcmp(config.algorithm, "tutte") == 0) {
+        run_tutte(g);
+    } 
+    else {
+        fprintf(stderr, "Błąd: Nieznany algorytm '%s'. Użyj 'fr' lub 'tutte'.\n", config.algorithm);
+        destroy_graph(&g);
+        return 1;
+    }
+
+    save_graph_results(g, config.output_file, config.binary_output);
+
+    if (config.verbose) {
+        printf("Wyniki zapisane do: %s\n", config.output_file ? config.output_file : "konsoli (stdout)");
+    }
+
+    destroy_graph(&g);
+
+    if (config.verbose) {
+        printf("--- LOG: Program zakończony poprawnie ---\n");
     }
 
     return 0;

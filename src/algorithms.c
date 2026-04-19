@@ -105,64 +105,90 @@ void run_fruchterman_reingold(Graph *g) {
 }
 
 //szukanie cyklu 
-static bool dfs_find_cycle(Graph *g, int u, int p, int *visited, int *parent, int *c_start, int *c_end) {
-    visited[u] = 1;
-    for (int i = 0; i < g->num_edges; i++) {
-        int v = -1;
-        if (g->edges[i].from == u) v = g->edges[i].to;
-        else if (g->edges[i].to == u) v = g->edges[i].from;
-
-        if (v != -1 && v != p) {
-            if (visited[v] == 1) { 
-                *c_start = v;
-                *c_end = u;
-                return true;
-            }
-            if (visited[v] == 0) {
-                parent[v] = u;
-                if (dfs_find_cycle(g, v, u, visited, parent, c_start, c_end)) {
-                    return true;
+static bool find_shortest_cycle(Graph *g, int *boundary, int *b_count) {
+    int min_cycle_len = g->num_vertices + 1;
+    int best_u = -1, best_v = -1;
+    int *best_parent = malloc(g->num_vertices * sizeof(int));
+    
+    int *dist = malloc(g->num_vertices * sizeof(int));
+    int *parent = malloc(g->num_vertices * sizeof(int));
+    int *queue = malloc(g->num_vertices * sizeof(int));
+    
+    for (int start_node = 0; start_node < g->num_vertices; start_node++) {
+        for (int i = 0; i < g->num_vertices; i++) { dist[i] = -1; parent[i] = -1; }
+        
+        int head = 0, tail = 0;
+        queue[tail++] = start_node;
+        dist[start_node] = 0;
+        
+        while (head < tail) {
+            int u = queue[head++];
+            
+            for (int i = 0; i < g->num_edges; i++) {
+                int v = -1;
+                if (g->edges[i].from == u) v = g->edges[i].to;
+                else if (g->edges[i].to == u) v = g->edges[i].from;
+                
+                if (v != -1) {
+                    if (dist[v] == -1) { 
+                        dist[v] = dist[u] + 1;
+                        parent[v] = u;
+                        queue[tail++] = v;
+                    } else if (v != parent[u] && dist[u] + dist[v] + 1 < min_cycle_len) {
+                        min_cycle_len = dist[u] + dist[v] + 1;
+                        best_u = u;
+                        best_v = v;
+                        for (int k = 0; k < g->num_vertices; k++) best_parent[k] = parent[k];
+                    }
                 }
             }
         }
     }
-    visited[u] = 2; 
+    
+    if (min_cycle_len <= g->num_vertices) {
+        *b_count = 0;
+        int temp_u = best_u;
+        while (temp_u != -1) {
+            boundary[(*b_count)++] = temp_u;
+            temp_u = best_parent[temp_u];
+        }
+        
+        for (int i = 0; i < *b_count / 2; i++) {
+            int t = boundary[i];
+            boundary[i] = boundary[*b_count - 1 - i];
+            boundary[*b_count - 1 - i] = t;
+        }
+        
+        int temp_v = best_v;
+        while (temp_v != -1) {
+            if (best_parent[temp_v] != -1) { 
+                boundary[(*b_count)++] = temp_v;
+            }
+            temp_v = best_parent[temp_v];
+        }
+        
+        free(dist); free(parent); free(queue); free(best_parent);
+        return true;
+    }
+    
+    free(dist); free(parent); free(queue); free(best_parent);
     return false;
 }
 
 void run_tutte(Graph *g) {
     if (g == NULL || g->num_vertices < 3) return;
-    printf("Rozpoczynam pelny algorytm Tutte'a (z dynamicznym wykrywaniem brzegow)...\n");
-
-    int *visited = calloc(g->num_vertices, sizeof(int));
-    int *parent = malloc(g->num_vertices * sizeof(int));
-    for (int i = 0; i < g->num_vertices; i++) parent[i] = -1;
-
-    int c_start = -1, c_end = -1;
-    bool has_cycle = false;
-
-    for (int i = 0; i < g->num_vertices; i++) {
-        if (visited[i] == 0) {
-            if (dfs_find_cycle(g, i, -1, visited, parent, &c_start, &c_end)) {
-                has_cycle = true;
-                break;
-            }
-        }
-    }
+    printf("Rozpoczynam prawilny algorytm Tutte'a (najkrotszy cykl jako sciana)...\n");
 
     int *boundary = malloc(g->num_vertices * sizeof(int));
     int b_count = 0;
     bool *is_boundary = calloc(g->num_vertices, sizeof(bool));
 
+    bool has_cycle = find_shortest_cycle(g, boundary, &b_count);
+
     if (has_cycle) {
-        int curr = c_end;
-        while (curr != c_start && curr != -1) {
-            boundary[b_count++] = curr;
-            is_boundary[curr] = true;
-            curr = parent[curr];
+        for (int i = 0; i < b_count; i++) {
+            is_boundary[boundary[i]] = true;
         }
-        boundary[b_count++] = c_start;
-        is_boundary[c_start] = true;
     } else {
         b_count = (g->num_vertices >= 3) ? 3 : g->num_vertices;
         for(int i = 0; i < b_count; i++) {
@@ -174,6 +200,7 @@ void run_tutte(Graph *g) {
     double radius = 350.0;
     double center_x = 400.0, center_y = 400.0;
 
+    
     for (int i = 0; i < b_count; i++) {
         int v = boundary[i];
         double angle = 2.0 * M_PI * i / b_count;
@@ -190,20 +217,20 @@ void run_tutte(Graph *g) {
 
     double *new_x = malloc(g->num_vertices * sizeof(double));
     double *new_y = malloc(g->num_vertices * sizeof(double));
-    int max_iterations = 1000;
+    int max_iterations = 2000; 
 
     for (int iter = 0; iter < max_iterations; iter++) {
         for (int i = 0; i < g->num_vertices; i++) {
             if (is_boundary[i]) continue; 
-
+            
             double sum_x = 0.0, sum_y = 0.0;
             int degree = 0;
-
+            
             for (int j = 0; j < g->num_edges; j++) {
                 int neighbor = -1;
                 if (g->edges[j].from == i) neighbor = g->edges[j].to;
                 else if (g->edges[j].to == i) neighbor = g->edges[j].from;
-
+                
                 if (neighbor != -1) {
                     sum_x += g->vertices[neighbor].x;
                     sum_y += g->vertices[neighbor].y;
@@ -228,7 +255,6 @@ void run_tutte(Graph *g) {
         }
     }
 
-    free(visited); free(parent); free(boundary); free(is_boundary);
-    free(new_x); free(new_y);
-    printf("Algorytm zakonczony pomyslnie.\n");
+    free(boundary); free(is_boundary); free(new_x); free(new_y);
+    printf("Algorytm Tutte'a zakonczony pomyslnie.\n");
 }

@@ -20,7 +20,7 @@ TEST_TARGET = run_tests
 all: $(OBJ_DIR) $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 test: $(OBJ_DIR) $(OBJS_NO_MAIN) $(TEST_OBJS)
 	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(OBJS_NO_MAIN) $(TEST_OBJS)

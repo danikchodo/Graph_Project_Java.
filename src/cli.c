@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h> 
+#include <getopt.h>
 void print_help() {
     printf("Użycie: grafy -i <plik_we> [-o <plik_wy>] [-a <algorytm>] [-b] [-v] [-h]\n");
     printf("Opcje:\n");

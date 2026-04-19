@@ -1,19 +1,52 @@
-# Wizualizacja grafów planarnych
+# Wizualizacja Grafów Planarnych
 
-Celem projektu jest stworzenie dwóch aplikacji – pierwszej w języku C, a drugiej w języku Java – służących do wyznaczania współrzędnych węzłów w celu estetycznej wizualizacji grafu planarnego. Aplikacja napisana w C ma być programem konsolowym, sterowanym wyłącznie za pomocą argumentów i opcji z linii poleceń. Z kolei aplikacja w Javie będzie programem okienkowym (GUI), sterowanym zdarzeniami.
+Celem projektu jest stworzenie dwóch aplikacji – pierwszej w języku C, a drugiej w języku Java – służących do wyznaczania współrzędnych węzłów w celu estetycznej wizualizacji grafu planarnego. 
 
-Wejściem dla programu będzie plik tekstowy zawierający definicję grafu w postaci listy krawędzi.
+## Opis Projektu (C)
+Aplikacja napisana w języku C jest programem konsolowym, sterowanym wyłącznie za pomocą argumentów i opcji z linii poleceń. Jej głównym zadaniem jest przetworzenie listy krawędzi i obliczenie optymalnego położenia wierzchołków na płaszczyźnie.
 
-Głównym zadaniem aplikacji w C jest przetworzenie tych danych i obliczenie optymalnego położenia wierzchołków na płaszczyźnie. Z uwagi na to, że istnieje wiele metod wyznaczania współrzędnych, w ramach projektu zaimplementowane, przetestowane i porównane zostaną co najmniej dwa różne algorytmy (np. algorytm Fruchtermana–Reingolda, triangulacja czy twierdzenie Tutte’a).
+### Zaimplementowane Algorytmy
+W ramach projektu zaimplementowano i przetestowano dwa różne podejścia do układania grafów:
+1.  **Algorytm Fruchtermana–Reingolda** (model siłowy).
+2.  **Algorytm Tutte’a** (relaksacja barycentryczna).
 
-Wynikiem działania programu ma być plik tekstowy lub binarny (wybór formatu zależy od użytkownika). Plik wyjściowy będzie zawierał wyliczoną listę współrzędnych (X, Y) przypisanych do poszczególnych wierzchołków.
+---
 
-## Dokumentacja projektu C
+## Dokumentacja Funkcjonalna
 
-Z uwagi na podział prac, część realizowana w języku C musi zostać opatrzona szczegółową dokumentacją, w skład której wchodzą:
+### Instrukcja obsługi (CLI)
+Program uruchamiany jest z linii poleceń według składni:
+`./grafy -i <plik_wejsciowy> -a <algorytm> [opcje]`
 
-1. **Dokumentacja funkcjonalna** – opisująca sposób działania programu z perspektywy użytkownika.
-2. **Dokumentacja implementacyjna** – przedstawiająca szczegóły techniczne, architekturę rozwiązania oraz ścisłe specyfikacje formatów wejścia i wyjścia.
-3. **Końcowa dokumentacja projektu** – podsumowująca zrealizowane zadanie.
+**Dostępne flagi:**
+* `-i <path>` : (Wymagane) Ścieżka do pliku wejściowego z listą krawędzi.
+* `-a <name>` : Wybór algorytmu: `fr` (Fruchterman) lub `tutte` (Tutte).
+* `-o <path>` : Ścieżka do pliku wyjściowego (domyślnie: konsola).
+* `-v` : Tryb Verbose (szczegółowe logi działania).
+* `-h` : Wyświetlenie pomocy.
 
-**Ważne:** Dokumentacja funkcjonalna oraz implementacyjna (punkty 1 i 2) zostanie przekazana innej grupie projektowej. Będzie ona stanowić podstawę do zaprogramowania przez nich aplikacji w języku Java, która musi poprawnie wczytywać wygenerowane przez nasz program pliki wynikowe.
+---
+
+## Dokumentacja Implementacyjna
+
+### Format wejściowy
+Program przyjmuje pliki tekstowe generowane przez moduł Java, gdzie każda linia definiuje jedną krawędź w formacie:
+`<nazwa_krawędzi> <id_wierzchołka_1> <id_wierzchołka_2> <waga>`
+
+### Format wyjściowy
+Wynikiem działania jest lista współrzędnych przypisana do identyfikatorów wierzchołków, sformatowana w sposób umożliwiający łatwy import do modułu wizualizacji:
+`ID_WIERZCHOŁKA  WSPÓŁRZĘDNA_X  WSPÓŁRZĘDNA_Y`
+
+### Architektura rozwiązania
+Projekt został podzielony na moduły:
+* `graph.c/h`: Struktury danych i zarządzanie pamięcią grafu.
+* `algorithms.c/h`: Logika matematyczna algorytmów FR i Tutte.
+* `cli.c/h`: Parser argumentów linii poleceń.
+* `io.c/h`: Obsługa wczytywania plików tekstowych i zapisu wyników.
+
+### Budowanie projektu
+Kompilacja odbywa się automatycznie za pomocą narzędzia `make`:
+```bash
+make        # Kompilacja programu głównego
+make test   # Uruchomienie testów jednostkowych
+make clean  # Usunięcie plików obiektowych

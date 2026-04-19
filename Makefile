@@ -23,7 +23,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ -lm
 
 test: $(OBJ_DIR) $(OBJS_NO_MAIN) $(TEST_OBJS)
-	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(OBJS_NO_MAIN) $(TEST_OBJS)
+	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(OBJS_NO_MAIN) $(TEST_OBJS) -lm
 	./$(TEST_TARGET)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c

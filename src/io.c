@@ -60,15 +60,11 @@ Graph* load_graph_from_text(const char *filename) {
 
 void save_graph_results(Graph *g, const char *filename, bool binary) {
     FILE *file = filename ? fopen(filename, "w") : stdout;
-    if (!file) {
-        fprintf(stderr, "Błąd: Nie można zapisać do pliku %s\n", filename);
-        return;
-    }
+    if (!file) return;
 
-    fprintf(file, "ID\tX\tY\n");
     for (int i = 0; i < g->num_vertices; i++) {
-        fprintf(file, "%d\t%.4f\t%.4f\n", i, g->vertices[i].x, g->vertices[i].y);
+        fprintf(file, "%d %.1f %.1f\n", i + 1, g->vertices[i].x, g->vertices[i].y);
     }
 
     if (filename) fclose(file);
-} 
+}

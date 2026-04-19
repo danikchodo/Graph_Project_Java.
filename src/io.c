@@ -16,7 +16,7 @@ Graph* load_graph_from_text(const char *filename) {
     int u, v;
     double weight;
     int max_id = -1;
-    int min_id = 2147483647; // Max int
+    int min_id = 2147483647; 
     int edge_count = 0;
 
     while (fgets(line, sizeof(line), file)) {
@@ -35,7 +35,6 @@ Graph* load_graph_from_text(const char *filename) {
     }
 
     int num_vertices = max_id - min_id + 1;
-
     Graph *g = create_graph(num_vertices, edge_count);
     if (!g) {
         fclose(file);
@@ -46,7 +45,6 @@ Graph* load_graph_from_text(const char *filename) {
     int current_edge = 0;
     while (fgets(line, sizeof(line), file)) {
         if (sscanf(line, "%49s %d %d %lf", edge_name, &u, &v, &weight) == 4) {
-            // Przesuwamy ID tak, aby zawsze zaczynały się od 0 w tablicy
             g->edges[current_edge].from = u - min_id; 
             g->edges[current_edge].to = v - min_id;
             g->edges[current_edge].weight = weight;
@@ -59,12 +57,34 @@ Graph* load_graph_from_text(const char *filename) {
 }
 
 void save_graph_results(Graph *g, const char *filename, bool binary) {
-    FILE *file = filename ? fopen(filename, "w") : stdout;
-    if (!file) return;
-
-    for (int i = 0; i < g->num_vertices; i++) {
-        fprintf(file, "%d %.1f %.1f\n", i + 1, g->vertices[i].x, g->vertices[i].y);
+    if (!filename) {
+        for (int i = 0; i < g->num_vertices; i++) {
+            printf("%d %.4f %.4f\n", i + 1, g->vertices[i].x, g->vertices[i].y);
+        }
+        return;
     }
 
-    if (filename) fclose(file);
+    if (binary) {
+        FILE *file = fopen(filename, "wb");
+        if (!file) return;
+
+        fwrite(&g->num_vertices, sizeof(int), 1, file);
+        for (int i = 0; i < g->num_vertices; i++) {
+            int id = i + 1;
+            double x = g->vertices[i].x;
+            double y = g->vertices[i].y;
+            fwrite(&id, sizeof(int), 1, file);
+            fwrite(&x, sizeof(double), 1, file);
+            fwrite(&y, sizeof(double), 1, file);
+        }
+        fclose(file);
+    } else {
+        FILE *file = fopen(filename, "w");
+        if (!file) return;
+
+        for (int i = 0; i < g->num_vertices; i++) {
+            fprintf(file, "%d %.4f %.4f\n", i + 1, g->vertices[i].x, g->vertices[i].y);
+        }
+        fclose(file);
+    }
 }

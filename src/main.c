@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "../include/cli.h"
 #include "../include/graph.h"
@@ -8,6 +9,7 @@
 #include "../include/io.h" 
 
 int main(int argc, char *argv[]) {
+    srand(time(NULL));
     AppConfig config;
 
     if (parse_arguments(argc, argv, &config) != 0) {

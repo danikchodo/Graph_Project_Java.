@@ -8,6 +8,25 @@
 #include "../include/algorithms.h"
 #include "../include/io.h" 
 
+void check_planarity_and_exit(Graph *g) {
+    if (g != NULL && g->num_vertices > 2) {
+        int max_edges_general = 3 * g->num_vertices - 6;
+    
+        if (g->num_edges > max_edges_general) {
+            fprintf(stderr, "\nGraf jest nieplanarny.\n");        
+            destroy_graph(&g);
+            exit(1); 
+        }
+
+        int max_edges_bipartite = 2 * g->num_vertices - 4;
+        if (g->num_edges > max_edges_bipartite) {
+             fprintf(stderr, "\nGraf jest nieplanarny.\n");
+             destroy_graph(&g);
+             exit(1); 
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     srand(time(NULL));
     AppConfig config;
@@ -23,11 +42,14 @@ int main(int argc, char *argv[]) {
     }
 
     Graph *g = load_graph_from_text(config.input_file);
+      
     
     if (g == NULL) {
         fprintf(stderr, "Błąd [1]: Nie udało się wczytać grafu z pliku %s\n", config.input_file);
         return 1;
     }
+
+    check_planarity_and_exit(g);
 
     if (config.verbose) {
         printf("Wczytano graf: %d wierzchołków, %d krawędzi.\n", g->num_vertices, g->num_edges);

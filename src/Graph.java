@@ -19,7 +19,7 @@ public class Graph {
         public int dest_id;
         public double weight;
 
-        public Edge(int source_Id,int dest_Id,double weight) {
+        public Edge(int source_id,int dest_id,double weight) {
             this.source_id=source_id;
             this.dest_id=dest_id;
             this.weight=weight;

@@ -38,6 +38,16 @@ import java.util.Map;
                     repaint();
             }
         });
+        addMouseWheelListener(new MouseWheelListener(){
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e){
+                if (e.getWheelRotation() < 0) {
+                    changeZoom(1.1); 
+                }else{
+                    changeZoom(0.9); 
+                }
+            }
+        });
     }
 //zmiana stanu paneli
     public void setShowIds(boolean showIds) { this.showIds = showIds; repaint(); }

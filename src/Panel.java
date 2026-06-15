@@ -14,7 +14,7 @@ import java.util.Map;
     private int offsetX = 0;
     private int offsetY = 0;
 
-    private Point
+    private Point lastMousePosition;
 
     public GraphPanel(Graph graph) {
         this.graph = graph;
@@ -36,6 +36,7 @@ import java.util.Map;
                     offsetY+=deltaY;
                     lastMousePosition=e.getPoint();
                     repaint();
+                }
             }
         });
         addMouseWheelListener(new MouseWheelListener(){

@@ -49,7 +49,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    check_planarity_and_exit(g);
 
     if (config.verbose) {
         printf("Wczytano graf: %d wierzchołków, %d krawędzi.\n", g->num_vertices, g->num_edges);

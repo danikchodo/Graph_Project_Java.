@@ -6,9 +6,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class MainFrame extends JFrame {
-
-    public MainFrame() {
-      private Graph graph;
+    private Graph graph;
     private GraphPanel graphPanel;
 
     public MainFrame() {
@@ -68,14 +66,63 @@ public class MainFrame extends JFrame {
         }
     }
 
-    private void loadGraphEdges() {
-        File originalFile=new File(".txt");
-        if (!originalFile.exists()) return;
+private void loadGraphEdges() {
+        File originalFile=new File("graf_testowy.txt");
+        if (!originalFile.exists()) {
+            System.err.println("Blad: Nie znaleziono pliku graf_testowy.txt!");
+            return;
+        }
+        
         try (java.util.Scanner sc=new java.util.Scanner(originalFile)) {
             sc.useLocale(java.util.Locale.US);
-            while (sc.hasNext()) {
-                String token=sc.next();
-                if (token.startsWith("args") {
-        SwingUtilities.invokeLater(()->new MainFrame());
+            
+            while (sc.hasNextLine()) {
+                String line=sc.nextLine().trim();
+                if (line.isEmpty()||line.startsWith("#")) {
+                    continue;
+                }
+                
+                java.util.Scanner lineScanner=new java.util.Scanner(line);
+                lineScanner.useLocale(java.util.Locale.US);
+                
+                if (lineScanner.hasNext()) {
+                    lineScanner.next();
+                    
+                    if (lineScanner.hasNextInt()) {
+                        int src=lineScanner.nextInt();
+                        
+                        if (lineScanner.hasNextInt()) {
+                            int dst=lineScanner.nextInt();
+                            
+                            double weight=1.0;
+                            if (lineScanner.hasNextDouble()) {
+                                weight=lineScanner.nextDouble();
+                            }
+                            
+                            graph.addEdge(new Graph.Edge(src, dst, weight));
+                        }
+                    }
+                }
+                lineScanner.close();
+            }
+        } catch (IOException e) {
+            System.err.println("Blad odczytu pliku: "+e.getMessage());
+        } 
+    }
+    private void loadCoordinates() {
+        File coordsFile = new File("output.txt");
+        if (coordsFile.exists()) {
+            try {
+                new Parser().load(coordsFile,graph);
+                graph.getEdges().clear();
+                loadGraphEdges();
+            } catch (IOException e) {
+                System.err.println(e.getMessage());
+            }
+        }
+    }
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new MainFrame());
     }
 }
+    
